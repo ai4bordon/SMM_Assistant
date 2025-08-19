@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Post History{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .post-content-preview {
+        max-height: 100px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .post-content-full {
+        max-height: none;
+    }
+    .post-image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-effect">
+    <h1 class="text-center gradient-layer">Post History</h1>
+
+    {% if posts %}
+        <div class="row">
+            {% for post in posts %}
+            <div class="col-md-12 mb-4">
+                <div class="card neumorphism-effect">
+                    <div class="card-body">
+                        <h5 class="card-title">Post #{{ post.id }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</h6>
+                        {% if post.topic %}
+                            <p class="card-text"><strong>Topic:</strong> {{ post.topic }}</p>
+                        {% endif %}
+                        {% if post.tone %}
+                            <p class="card-text"><strong>Tone:</strong> {{ post.tone }}</p>
+                        {% endif %}
+                        <div class="post-content-preview" onclick="toggleContent(this)">
+                            <p class="card-text">{{ post.content }}</p>
+                        </div>
+                        {% if post.image_url %}
+                            <img src="{{ post.image_url }}" alt="Post Image" class="img-fluid post-image-preview" onclick="toggleImage(this)">
+                        {% endif %}
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary btn-sm interactive-button" data-toggle="modal" data-target="#editPostModal{{ post.id }}">Edit</button>
+                            <form method="POST" action="{{ url_for('smm.regenerate_image', post_id=post.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-warning btn-sm interactive-button">Regenerate Image</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('smm.repost_to_vk', post_id=post.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-info btn-sm interactive-button">Repost to VK</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('smm.delete_post', post_id=post.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this post?')">
+                                <button type="submit" class="btn btn-danger btn-sm interactive-button">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Edit Post Modals -->
+        {% for post in posts %}
+        <div class="modal fade" id="editPostModal{{ post.id }}" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel{{ post.id }}" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content glass-effect">
+              <div class="modal-header">
+                <h5 class="modal-title gradient-layer" id="editPostModalLabel{{ post.id }}">Edit Post #{{ post.id }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <form method="POST" action="{{ url_for('smm.edit_post', post_id=post.id) }}">
+                  <div class="form-group">
+                    <label for="content{{ post.id }}">Post Content</label>
+                    <textarea class="form-control" id="content{{ post.id }}" name="content" rows="5">{{ post.content }}</textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary interactive-button">Save Changes</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            No posts found in history.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function toggleContent(element) {
+        element.classList.toggle('post-content-preview');
+        element.classList.toggle('post-content-full');
+    }
+
+    function toggleImage(element) {
+        element.classList.toggle('post-image-preview');
+    }
+</script>
+{% endblock %}

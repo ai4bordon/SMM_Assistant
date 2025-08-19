@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Post Generator{% endblock %}
+{% block content %}
+<div class="glass-effect">
+    <h1 class="text-center gradient-layer">Post Generator</h1>
+    <form id="post-generator-form" method="POST" class="neumorphism-effect mt-4">
+        <div class="form-group">
+            <label for="tone">Tone:</label>
+            <input type="text" name="tone" id="tone" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="topic">Topic:</label>
+            <input type="text" name="topic" id="topic" class="form-control" required>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" name="generate_image" id="generate_image" class="form-check-input">
+            <label for="generate_image" class="form-check-label">Generate Image</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" name="auto_post" id="auto_post" class="form-check-input">
+            <label for="auto_post" class="form-check-label">Auto Post to VK</label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block interactive-button mt-3">Generate</button>
+    </form>
+
+    <div id="loading-indicator" style="display: none;" class="text-center mt-4">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p id="loading-text">Generating post...</p>
+    </div>
+
+    <div id="result-container">
+        {% if post_content %}
+        <div class="glass-effect mt-4">
+            <h2 class="text-center gradient-layer">Generated Post</h2>
+            <p>{{ post_content }}</p>
+        </div>
+        {% endif %}
+
+        {% if image_url %}
+        <div class="glass-effect mt-4 text-center">
+            <h2 class="text-center gradient-layer">Generated Image</h2>
+            <img src="{{ image_url }}" alt="Generated Image" width="300px" class="img-fluid mx-auto d-block">
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.getElementById('post-generator-form').addEventListener('submit', function() {
+        document.getElementById('loading-indicator').style.display = 'block';
+        document.getElementById('result-container').style.display = 'none';
+        
+        const generateImageCheckbox = document.getElementById('generate_image');
+        const loadingText = document.getElementById('loading-text');
+        
+        if (generateImageCheckbox.checked) {
+            loadingText.innerText = 'Generating post and image...';
+        } else {
+            loadingText.innerText = 'Generating post...';
+        }
+    });
+</script>
+{% endblock %}

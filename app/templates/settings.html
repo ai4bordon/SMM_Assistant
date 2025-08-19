@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="glass-effect">
+    <h1 class="text-center gradient-layer">Settings</h1>
+    <form method="POST" class="neumorphism-effect mt-4">
+        <div class="form-group">
+            <label for="vk_access_token">VK Access Token:</label>
+            <input type="text" name="vk_access_token" id="vk_access_token" class="form-control" value="{{ user.vk_access_token }}">
+        </div>
+        <div class="form-group">
+            <label for="vk_group_id">VK Group ID:</label>
+            <input type="text" name="vk_group_id" id="vk_group_id" class="form-control" value="{{ user.vk_group_id }}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block interactive-button">Save</button>
+    </form>
+</div>
+{% endblock %}
