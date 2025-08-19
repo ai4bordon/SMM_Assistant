@@ -13,12 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code into the container at /app
 COPY . .
 
-# Make port 80 available to the world outside this container
-EXPOSE 80
-
 # Define environment variables
 ENV FLASK_APP=main.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 # Run the application
-CMD ["gunicorn", "-b", "0.0.0.0:80", "main:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "main:app"]

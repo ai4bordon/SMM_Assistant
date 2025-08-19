@@ -20,7 +20,7 @@ SMM Assistant - это веб-приложение на Flask, которое п
 *   **Frontend:** HTML, CSS, Bootstrap, JavaScript, tsParticles
 *   **API:** OpenAI, VK API
 *   **База данных:** PostgreSQL (в Docker), SQLite (для локальной разработки)
-*   **Деплой:** Docker, Gunicorn
+*   **Деплой:** Docker, Gunicorn, Nginx
 
 ## Установка и запуск
 
