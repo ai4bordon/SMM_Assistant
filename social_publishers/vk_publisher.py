@@ -29,11 +29,28 @@ class VKPublisher:
         try:
             upload_url_response_json = upload_url_response.json()
         except ValueError as e:
-            print(f"Invalid JSON response in upload_photo (upload_url_response): {upload_url_response.text}")
-            raise Exception(f"Invalid JSON response from VK API in upload_photo: {upload_url_response.text}") from e
+            error_msg = f"Invalid JSON response in upload_photo (upload_url_response): {upload_url_response.text}"
+            logger.error(error_msg)
+            raise Exception(f"Ошибка при получении URL для загрузки фото: Неверный формат ответа от VK API") from e
 
+        # Проверка на ошибки в ответе API
         if 'error' in upload_url_response_json:
-            raise Exception(upload_url_response_json['error']['error_msg'])
+            error_code = upload_url_response_json['error'].get('error_code', 'unknown')
+            error_msg = upload_url_response_json['error'].get('error_msg', 'Неизвестная ошибка')
+            
+            # Обработка специфичных кодов ошибок VK
+            if error_code == 5:
+                logger.error(f"VK API authentication error: {error_msg}")
+                raise Exception("Ошибка аутентификации VK API: Неверный ключ доступа. Проверьте настройки.")
+            elif error_code == 500:
+                logger.error(f"VK API server error: {error_msg}")
+                raise Exception("Ошибка сервера VK API. Попробуйте повторить позже.")
+            elif error_code == 100:
+                logger.error(f"VK API validation error: {error_msg}")
+                raise Exception("Ошибка валидации параметров запроса VK API.")
+            else:
+                logger.error(f"VK API error (code {error_code}): {error_msg}")
+                raise Exception(f"Ошибка VK API при получении URL для загрузки фото: {error_msg}")
         else:
             upload_url = upload_url_response_json['response']['upload_url']
             image_data = requests.get(image_url).content
@@ -46,8 +63,9 @@ class VKPublisher:
             try:
                 upload_response_json = upload_response.json()
             except ValueError as e:
-                print(f"Invalid JSON response in upload_photo (upload_response): {upload_response.text}")
-                raise Exception(f"Invalid JSON response from VK API in upload_photo: {upload_response.text}") from e
+                error_msg = f"Invalid JSON response in upload_photo (upload_response): {upload_response.text}"
+                logger.error(error_msg)
+                raise Exception(f"Ошибка при загрузке фото: Неверный формат ответа от VK API") from e
 
             save_response = requests.get(
                 'https://api.vk.com/method/photos.saveWallPhoto',
@@ -68,9 +86,29 @@ class VKPublisher:
             try:
                 save_response_json = save_response.json()
             except ValueError as e:
-                print(f"Invalid JSON response in upload_photo (save_response): {save_response.text}")
-                raise Exception(f"Invalid JSON response from VK API in upload_photo: {save_response.text}") from e
+                error_msg = f"Invalid JSON response in upload_photo (save_response): {save_response.text}"
+                logger.error(error_msg)
+                raise Exception(f"Ошибка при сохранении фото: Неверный формат ответа от VK API") from e
 
+            # Проверка на ошибки в ответе API при сохранении фото
+            if 'error' in save_response_json:
+                error_code = save_response_json['error'].get('error_code', 'unknown')
+                error_msg = save_response_json['error'].get('error_msg', 'Неизвестная ошибка')
+                
+                # Обработка специфичных кодов ошибок VK
+                if error_code == 5:
+                    logger.error(f"VK API authentication error during photo save: {error_msg}")
+                    raise Exception("Ошибка аутентификации VK API при сохранении фото: Неверный ключ доступа.")
+                elif error_code == 500:
+                    logger.error(f"VK API server error during photo save: {error_msg}")
+                    raise Exception("Ошибка сервера VK API при сохранении фото. Попробуйте повторить позже.")
+                elif error_code == 100:
+                    logger.error(f"VK API validation error during photo save: {error_msg}")
+                    raise Exception("Ошибка валидации параметров запроса VK API при сохранении фото.")
+                else:
+                    logger.error(f"VK API error during photo save (code {error_code}): {error_msg}")
+                    raise Exception(f"Ошибка VK API при сохранении фото: {error_msg}")
+            
             photo_id = save_response_json['response'][0]['id']
             owner_id = save_response_json['response'][0]['owner_id']
 
@@ -102,13 +140,30 @@ class VKPublisher:
         try:
             response_json = response.json()
         except ValueError as e:
-            # Вывод содержимого ответа для отладки
-            print(f"Invalid JSON response: {response.text}")
-            raise Exception(f"Invalid JSON response from VK API: {response.text}") from e
+            error_msg = f"Invalid JSON response: {response.text}"
+            logger.error(error_msg)
+            raise Exception(f"Ошибка при публикации поста: Неверный формат ответа от VK API") from e
         
         # Проверка на ошибки в ответе API
         if 'error' in response_json:
-            logger.error(f"VK API error: {response_json['error']['error_msg']}")
-            raise Exception(response_json['error']['error_msg'])
+            error_code = response_json['error'].get('error_code', 'unknown')
+            error_msg = response_json['error'].get('error_msg', 'Неизвестная ошибка')
+            
+            # Обработка специфичных кодов ошибок VK
+            if error_code == 5:
+                logger.error(f"VK API authentication error during post publishing: {error_msg}")
+                raise Exception("Ошибка аутентификации VK API при публикации поста: Неверный ключ доступа.")
+            elif error_code == 500:
+                logger.error(f"VK API server error during post publishing: {error_msg}")
+                raise Exception("Ошибка сервера VK API при публикации поста. Попробуйте повторить позже.")
+            elif error_code == 100:
+                logger.error(f"VK API validation error during post publishing: {error_msg}")
+                raise Exception("Ошибка валидации параметров запроса VK API при публикации поста.")
+            elif error_code == 214:
+                logger.error(f"VK API access error during post publishing: {error_msg}")
+                raise Exception("Ошибка доступа VK API при публикации поста: Нет прав на публикацию.")
+            else:
+                logger.error(f"VK API error during post publishing (code {error_code}): {error_msg}")
+                raise Exception(f"Ошибка VK API при публикации поста: {error_msg}")
         
         return response_json

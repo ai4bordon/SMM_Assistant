@@ -1,3 +1,4 @@
+import dotenv
 from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -11,8 +12,14 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
+    dotenv.load_dotenv()
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
 
     db.init_app(app)
     bcrypt.init_app(app)

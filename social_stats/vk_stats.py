@@ -10,9 +10,15 @@ class VKStats:
     def __init__(self, vk_access_token, group_id):
         self.vk_access_token = vk_access_token
         self.group_id = group_id
-        logger.debug(f"VKStats initialized with vk_access_token: {vk_access_token[:10]}... and group_id: {group_id}")
+        # Безопасное логирование токена (не показываем токен, если он None)
+        token_log = vk_access_token[:10] + "..." if vk_access_token else "None"
+        logger.debug(f"VKStats initialized with vk_access_token: {token_log} and group_id: {group_id}")
 
     def get_stats(self, start_date, end_date):
+        # Проверка на None для обязательных параметров
+        if not self.vk_access_token or not self.group_id:
+            raise ValueError("VK access token and group ID must be provided")
+            
         url = 'https://api.vk.com/method/stats.get'
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
         end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
@@ -33,12 +39,32 @@ class VKStats:
         logger.debug(f"Getting stats with params: {params}")
         response = requests.get(url, params=params).json()
         logger.debug(f"Stats response: {response}")
+        
+        # Проверка на пустой ответ
+        if not response:
+            raise Exception("Empty response from VK API")
+        
+        # Проверка на ошибки в ответе
         if 'error' in response:
-            raise Exception(response['error']['error_msg'])
-        else:
-            return response['response'][0]
+            error_code = response['error'].get('error_code', 'Unknown')
+            error_msg = response['error'].get('error_msg', 'Unknown error')
+            raise Exception(f"VK API error {error_code}: {error_msg}")
+        
+        # Проверка наличия ключа 'response' в ответе
+        if 'response' not in response:
+            raise Exception("Invalid response format from VK API: missing 'response' key")
+        
+        # Проверка на пустой массив в response
+        if not response['response']:
+            return None  # Возвращаем None, если нет данных
+        
+        return response['response'][0]
 
     def get_followers(self):
+        # Проверка на None для обязательных параметров
+        if not self.vk_access_token or not self.group_id:
+            raise ValueError("VK access token and group ID must be provided")
+            
         url = 'https://api.vk.com/method/groups.getMembers'
         params = {
             'access_token': self.vk_access_token,
@@ -48,7 +74,23 @@ class VKStats:
         logger.debug(f"Getting followers with params: {params}")
         response = requests.get(url, params=params).json()
         logger.debug(f"Followers response: {response}")
+        
+        # Проверка на пустой ответ
+        if not response:
+            raise Exception("Empty response from VK API")
+        
+        # Проверка на ошибки в ответе
         if 'error' in response:
-            raise Exception(response['error']['error_msg'])
-        else:
-            return response['response']['count']
+            error_code = response['error'].get('error_code', 'Unknown')
+            error_msg = response['error'].get('error_msg', 'Unknown error')
+            raise Exception(f"VK API error {error_code}: {error_msg}")
+        
+        # Проверка наличия ключа 'response' в ответе
+        if 'response' not in response:
+            raise Exception("Invalid response format from VK API: missing 'response' key")
+        
+        # Проверка наличия ключа 'count' в response
+        if 'count' not in response['response']:
+            raise Exception("Invalid response format from VK API: missing 'count' key in 'response'")
+        
+        return response['response']['count']

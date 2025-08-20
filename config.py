@@ -1,8 +1,14 @@
 import os
+import logging
 
-#Open AI
+# Настройка логирования
+logger = logging.getLogger(__name__)
+
+# Open AI
 openai_key = os.environ.get('OPENAI_KEY')
 
-# VK
-vk_api_key = os.environ.get('VK_API_KEY')
-vk_group_id = os.environ.get('VK_GROUP_ID')
+# Проверка наличия API ключа OpenAI
+if not openai_key:
+    error_msg = "OPENAI_KEY environment variable is not set. Please set it in your .env file or environment variables."
+    logger.error(error_msg)
+    raise ValueError(error_msg)
